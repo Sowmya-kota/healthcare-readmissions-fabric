@@ -1,0 +1,56 @@
+DAX measures - sm_healthcare_readmissions (Direct Lake semantic model)
+Display folders: Measures\1. Volume, \2. Readmissions, \3. Cost & LOS, \4. Emergency
+
+==================== 1. Volume ====================
+Total Encounters = COUNTROWS(fact_encounter)
+
+Inpatient Admissions =
+CALCULATE([Total Encounters], fact_encounter[encounter_class] = "inpatient")
+
+Patients = DISTINCTCOUNT(fact_encounter[patient_id])
+
+==================== 2. Readmissions ====================
+-- Readmissions are measured from the discharge date, so the inactive
+-- discharge_date relationship is activated with USERELATIONSHIP.
+
+Eligible Index Stays =
+CALCULATE(
+    SUM(fact_encounter[is_readmit_eligible]),
+    USERELATIONSHIP(fact_encounter[discharge_date], dim_date[date])
+)
+
+Unplanned Readmissions =
+CALCULATE(
+    SUM(fact_encounter[readmit_30d]),
+    USERELATIONSHIP(fact_encounter[discharge_date], dim_date[date])
+)
+
+Readmission Rate % = DIVIDE([Unplanned Readmissions], [Eligible Index Stays])
+
+All-Cause Readmission Rate % =
+CALCULATE(
+    DIVIDE(SUM(fact_encounter[readmit_30d_all_cause]), SUM(fact_encounter[is_readmit_eligible])),
+    USERELATIONSHIP(fact_encounter[discharge_date], dim_date[date])
+)
+
+Readmission Rate % LY =
+CALCULATE([Readmission Rate %], SAMEPERIODLASTYEAR(dim_date[date]))
+
+==================== 3. Cost & LOS ====================
+Avg Length of Stay (days) =
+CALCULATE(AVERAGE(fact_encounter[los_days]), fact_encounter[encounter_class] = "inpatient")
+
+Total Claim Cost = SUM(fact_encounter[total_claim_cost])
+
+Avg Cost per Encounter = DIVIDE([Total Claim Cost], [Total Encounters])
+
+Payer Coverage % = DIVIDE(SUM(fact_encounter[payer_coverage]), [Total Claim Cost])
+
+==================== 4. Emergency ====================
+ED Visits =
+CALCULATE([Total Encounters], fact_encounter[encounter_class] = "emergency")
+
+ED Visits per 1,000 Patients = DIVIDE([ED Visits], [Patients]) * 1000
+
+==================== Validation ====================
+Readmission Rate % in the report = 11.8%, matching the gold-layer SQL result (1,882 / 15,941).

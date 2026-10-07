@@ -1,0 +1,80 @@
+Step 2: Output
+
+=== Data types ===
+encounters: [('START', 'timestamp'), ('STOP', 'timestamp')]
+patients: [('BIRTHDATE', 'date'), ('DEATHDATE', 'date')]
+patients: [('BIRTHDATE', 'date'), ('DEATHDATE', 'date')]
+
+=== Duplicate Ids ===
+patients: 0
+encounters: 0
+organizations: 0
+providers: 0
+payers: 0
+
+=== Null keys in encounters ===
+Id: 0
+PATIENT: 0
+ORGANIZATION: 0
+PROVIDER: 0
+PAYER: 0
+START: 0
+STOP: 0
+
+=== Orphan keys ===
+encounters -> patients: 0
+encounters -> organizations: 0
+encounters -> providers: 0
+encounters -> payers: 0
+conditions -> encounters: 0
+
+=== Logic checks ===
+STOP before START: 0
+Negative claim cost: 0
++-------------------+-------------------+
+|    first_encounter|     last_encounter|
++-------------------+-------------------+
+|1922-04-02 07:59:09|2022-02-05 20:27:36|
++-------------------+-------------------+
+
+=== Encounter class distribution ===
++--------------+------+
+|ENCOUNTERCLASS| count|
++--------------+------+
+|      wellness|495983|
+|    ambulatory|423113|
+|    outpatient|234059|
+|    urgentcare| 92906|
+|     inpatient| 49636|
+|     emergency| 48395|
+|          home| 16037|
+|       hospice|  7460|
+|           snf|  3846|
++--------------+------+
+
+
+---------------------------
+
+Step 3: Output
+
+silver.patients: 15,354 rows saved
+silver.encounters: 1,371,435 rows saved
+silver.conditions: 866,514 rows saved
+silver.organizations: 6,765 rows saved
+silver.providers: 37,881 rows saved
+silver.payers: 10 rows saved
+
+----------------------------------------------
+
+Final readmission definition (Step 5 output)
+
+Eligible index stays:                      15,941
+All-cause 30-day readmissions:              4,879  (30.61%)
+Minus transfers / continued stays (day 0-1): -2,030
+Minus planned cancer care (chemo cycles):     -967
+Final unplanned readmissions:               1,882
+Final unplanned readmission rate:          11.81%
+
+Rule: readmissions on day 0-1 are treated as the same stay;
+readmissions for cancer treatment are planned care;
+"no reason recorded" readmissions are kept as unplanned (data limitation).
